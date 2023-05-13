@@ -1,7 +1,7 @@
 {
-  "name": "prototype-express-ts",
+  "name": "green-planet-eco-backend",
   "version": "1.0.0",
-  "description": "The typescript protoytpe of express",
+  "description": "The backend of green planet eco",
   "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mr-new-0509/prototype-express-ts.git"
+    "url": "git+https://github.com/mr-new-0509/green-planet-eco-backend.git"
   },
   "keywords": [
     "gls"
@@ -19,17 +19,19 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mr-new-0509/prototype-express-ts/issues"
+    "url": "https://github.com/mr-new-0509/green-planet-eco-backend/issues"
   },
-  "homepage": "https://github.com/mr-new-0509/prototype-express-ts#readme",
+  "homepage": "https://github.com/mr-new-0509/green-planet-eco-backend#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "concurrently": "^7.6.0",
     "config": "^3.3.9",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.1.1",
     "sequelize": "^6.31.0",
     "sib-api-v3-sdk": "^8.5.0",
     "sqlite3": "^5.1.6"

@@ -8,3 +8,7 @@ export interface IOkPacket {
   protocol41: boolean;
   changedRows: number;
 }
+
+export interface IAffiliator {
+  senderWallet: string;
+}

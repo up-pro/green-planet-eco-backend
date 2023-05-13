@@ -1,15 +1,14 @@
 import { Request, Response } from "express";
 import {
-  ADMIN_EMAIL,
   MAIL_TITLE_OF_CONTACT_US,
-  MAIL_TITLE_OF_QUESTION,
+  MAIL_TITLE_OF_QUESTION
 } from "../utils/constants";
 const SibApiV3Sdk = require("sib-api-v3-sdk");
 const Sib = require("../utils/Sib");
+const { ADMIN_EMAIL } = process.env;
 
 /** Contact Us */
 export const contactToAdmin = (req: Request, res: Response) => {
-  console.log(">>>>>> req.body => ", req.body);
   const { name, email, website, message } = req.body;
 
   if (!name || !email || !website) {
@@ -56,7 +55,6 @@ export const contactToAdmin = (req: Request, res: Response) => {
 
 /** Ask questions */
 export const askQuestion = (req: Request, res: Response) => {
-  console.log(">>>>>> req.body => ", req.body);
   const { name, email, message } = req.body;
 
   if (!name || !email) {
