@@ -2,13 +2,13 @@ import express, { Express } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 
-const connectDB = require("./config/db");
+// const connectDB = require("./config/db");
 
 dotenv.config();
 
 const app: Express = express();
 
-connectDB();
+// connectDB();
 
 //  Prevent cors error
 app.use(

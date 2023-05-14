@@ -54,6 +54,8 @@ export const sendAffiliateLink = async (req: Request, res: Response) => {
 export const payToAffiliator = async (req: Request, res: Response) => {
   const { tokenAmount, affiliateToken } = req.body;
 
+  console.log(">>>>> req.body => ", req.body);
+
   jwt.verify(
     affiliateToken,
     config.get("jwtSecret"),
