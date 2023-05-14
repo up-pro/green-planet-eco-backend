@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
+import { ethers } from "ethers";
 const jwt = require("jsonwebtoken");
 const config = require("config");
 const SibApiV3Sdk = require("sib-api-v3-sdk");
 const Sib = require("../utils/Sib");
-import { CONTRACT_ABI, MAIL_TITLE_OF_AFFILIATE } from "../utils/constants";
+import {
+  CONTRACT_ABI,
+  MAIL_TITLE_OF_AFFILIATE,
+  QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN
+} from "../utils/constants";
 import { IAffiliator } from "../utils/interfaces";
-import { ethers } from "ethers";
 const {
   WEBSITE_URL,
   ADMIN_WALLET_PRIVATE_KEY,
@@ -15,6 +19,7 @@ const {
 } = process.env;
 
 export const sendAffiliateLink = async (req: Request, res: Response) => {
+  console.log(">>>>>>>>>> req.body => ", req.body);
   const { senderEmail, senderWallet, receiverEmail } = req.body;
 
   jwt.sign(
@@ -36,7 +41,7 @@ export const sendAffiliateLink = async (req: Request, res: Response) => {
       sendSmtpEmail.sender = sender;
       sendSmtpEmail.to = receivers;
       sendSmtpEmail.htmlContent = `
-        <a href="${WEBSITE_URL}/invite/${token}" target="_blank">${WEBSITE_URL}</a>
+        <a href="${WEBSITE_URL}?${QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN}=${token}" target="_blank">${WEBSITE_URL}</a>
       `;
 
       tranEmailApi
@@ -53,8 +58,6 @@ export const sendAffiliateLink = async (req: Request, res: Response) => {
 
 export const payToAffiliator = async (req: Request, res: Response) => {
   const { tokenAmount, affiliateToken } = req.body;
-
-  console.log(">>>>> req.body => ", req.body);
 
   jwt.verify(
     affiliateToken,
@@ -77,7 +80,7 @@ export const payToAffiliator = async (req: Request, res: Response) => {
       );
       const tx = await contract.transfer(
         senderWallet,
-        ethers.utils.parseEther(tokenAmount)
+        ethers.utils.parseEther(`${tokenAmount}`)
       );
       await tx.wait();
       return res.sendStatus(200);

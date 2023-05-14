@@ -4,6 +4,8 @@ export const MAIL_TITLE_OF_CONTACT_US = "Contact Us";
 export const MAIL_TITLE_OF_QUESTION = "Question";
 export const MAIL_TITLE_OF_AFFILIATE = "Please check this site.";
 
+export const QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN = "affiliate-token";
+
 export const CONTRACT_ABI = [
   { inputs: [], stateMutability: "nonpayable", type: "constructor" },
   {
