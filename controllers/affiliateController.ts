@@ -18,8 +18,7 @@ const {
   CONTRACT_ADDRESS
 } = process.env;
 
-export const sendAffiliateLink = async (req: Request, res: Response) => {
-  console.log(">>>>>>>>>> req.body => ", req.body);
+export const sendAffiliateLink = (req: Request, res: Response) => {
   const { senderEmail, senderWallet, receiverEmail } = req.body;
 
   jwt.sign(
@@ -56,8 +55,8 @@ export const sendAffiliateLink = async (req: Request, res: Response) => {
   );
 };
 
-export const payToAffiliator = async (req: Request, res: Response) => {
-  const { tokenAmount, affiliateToken } = req.body;
+export const payToAffiliator = (req: Request, res: Response) => {
+  const { tokenAmount, affiliateToken, purchaserAddress } = req.body;
 
   jwt.verify(
     affiliateToken,
@@ -67,23 +66,45 @@ export const payToAffiliator = async (req: Request, res: Response) => {
         return res.sendStatus(401);
       }
       const { senderWallet } = sender;
-      const network = ethers.providers.getNetwork(CHAIN_ID || "");
-      const provider = new ethers.providers.JsonRpcProvider(RPC_URL, network);
-      const signer = new ethers.Wallet(
-        ADMIN_WALLET_PRIVATE_KEY || "",
-        provider
+      if (purchaserAddress === senderWallet) {
+        return res.sendStatus(401);
+      } else {
+        const network = ethers.providers.getNetwork(CHAIN_ID || "");
+        const provider = new ethers.providers.JsonRpcProvider(RPC_URL, network);
+        const signer = new ethers.Wallet(
+          ADMIN_WALLET_PRIVATE_KEY || "",
+          provider
+        );
+        const contract = new ethers.Contract(
+          CONTRACT_ADDRESS || "",
+          CONTRACT_ABI,
+          signer
+        );
+        const tx = await contract.transfer(
+          senderWallet,
+          ethers.utils.parseEther(`${tokenAmount}`)
+        );
+        await tx.wait();
+        return res.sendStatus(200);
+      }
+    }
+  );
+};
+
+export const getAffiliateLink = (req: Request, res: Response) => {
+  const { senderWallet } = req.params;
+  jwt.sign(
+    { senderWallet },
+    config.get("jwtSecret"),
+    {},
+    (error: Error, token: string) => {
+      if (error) {
+        return res.sendStatus(500);
+      }
+
+      return res.send(
+        `${WEBSITE_URL}?${QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN}=${token}`
       );
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS || "",
-        CONTRACT_ABI,
-        signer
-      );
-      const tx = await contract.transfer(
-        senderWallet,
-        ethers.utils.parseEther(`${tokenAmount}`)
-      );
-      await tx.wait();
-      return res.sendStatus(200);
     }
   );
 };
