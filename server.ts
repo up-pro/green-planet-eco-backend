@@ -2,18 +2,14 @@ import express, { Express } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 
-// const connectDB = require("./config/db");
-
 dotenv.config();
 
 const app: Express = express();
 
-// connectDB();
-
 //  Prevent cors error
 app.use(
   cors({
-    origin: "*"
+    origin: "*",
   })
 );
 
@@ -23,6 +19,7 @@ app.use(express.json());
 // Define Routes
 app.use("/api/contact", require("./routes/contactRoutes"));
 app.use("/api/affiliate", require("./routes/affiliateRoutes"));
+app.use("/api/membership", require("./routes/membershipRoutes"));
 
 const PORT = process.env.PORT || 5000;
 

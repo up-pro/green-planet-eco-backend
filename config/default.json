@@ -1,4 +1,3 @@
 {
-  "jwtSecret": "Green Planet Eco",
-  "mongoURI": "mongodb://127.0.0.1:27017/gpe"
+  "jwtSecret": "green-planet-eco"
 }
