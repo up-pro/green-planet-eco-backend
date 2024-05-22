@@ -2,14 +2,14 @@ import { Request, Response } from "express";
 import { ethers } from "ethers";
 const jwt = require("jsonwebtoken");
 const config = require("config");
-const SibApiV3Sdk = require("sib-api-v3-sdk");
-const Sib = require("../utils/Sib");
+const SibApiV3Sdk = require("@getbrevo/brevo");
 import {
   CONTRACT_ABI,
   MAIL_TITLE_OF_AFFILIATE,
-  QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN
+  QUERY_PARAM_AFFILIATE_TOKEN
 } from "../utils/constants";
 import { IAffiliator } from "../utils/interfaces";
+import sibApiInstance from "../utils/sibApiInstance";
 const {
   WEBSITE_URL,
   ADMIN_WALLET_PRIVATE_KEY,
@@ -31,7 +31,6 @@ export const sendAffiliateLink = (req: Request, res: Response) => {
       }
 
       let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-      const tranEmailApi = new Sib.TransactionalEmailsApi();
 
       const sender = { email: senderEmail };
       const receivers = [{ email: receiverEmail }];
@@ -40,10 +39,10 @@ export const sendAffiliateLink = (req: Request, res: Response) => {
       sendSmtpEmail.sender = sender;
       sendSmtpEmail.to = receivers;
       sendSmtpEmail.htmlContent = `
-        <a href="${WEBSITE_URL}?${QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN}=${token}" target="_blank">${WEBSITE_URL}</a>
+        <a href="${WEBSITE_URL}?${QUERY_PARAM_AFFILIATE_TOKEN}=${token}" target="_blank">${WEBSITE_URL}</a>
       `;
 
-      tranEmailApi
+      sibApiInstance
         .sendTransacEmail(sendSmtpEmail)
         .then((result: any) => {
           return res.sendStatus(200);
@@ -103,7 +102,7 @@ export const getAffiliateLink = (req: Request, res: Response) => {
       }
 
       return res.send(
-        `${WEBSITE_URL}?${QUERY_PARAM_NAME_OF_AFFILIATE_TOKEN}=${token}`
+        `${WEBSITE_URL}?${QUERY_PARAM_AFFILIATE_TOKEN}=${token}`
       );
     }
   );
