@@ -3,8 +3,8 @@ import {
   MAIL_TITLE_OF_CONTACT_US,
   MAIL_TITLE_OF_QUESTION
 } from "../utils/constants";
-const SibApiV3Sdk = require("sib-api-v3-sdk");
-const Sib = require("../utils/Sib");
+import sibApiInstance from "../utils/sibApiInstance";
+const SibApiV3Sdk = require("@getbrevo/brevo");
 const { ADMIN_EMAIL } = process.env;
 
 /** Contact Us */
@@ -16,7 +16,6 @@ export const contactToAdmin = (req: Request, res: Response) => {
   }
 
   let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-  const tranEmailApi = new Sib.TransactionalEmailsApi();
 
   const sender = { email, name };
   const receivers = [{ email: ADMIN_EMAIL }];
@@ -41,7 +40,7 @@ export const contactToAdmin = (req: Request, res: Response) => {
   //   `,
   // };
 
-  tranEmailApi
+  sibApiInstance
     .sendTransacEmail(sendSmtpEmail)
     .then((result: any) => {
       console.log("# result => ", result);
@@ -62,7 +61,6 @@ export const askQuestion = (req: Request, res: Response) => {
   }
 
   let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-  const tranEmailApi = new Sib.TransactionalEmailsApi();
 
   const sender = { email, name };
   const receivers = [{ email: ADMIN_EMAIL }];
@@ -84,7 +82,7 @@ export const askQuestion = (req: Request, res: Response) => {
   //   `,
   // };
 
-  tranEmailApi
+  sibApiInstance
     .sendTransacEmail(sendSmtpEmail)
     .then((result: any) => {
       console.log("# result => ", result);
