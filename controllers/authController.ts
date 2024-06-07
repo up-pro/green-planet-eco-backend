@@ -8,14 +8,21 @@ import {
   MAIL_TITLE_EMAIL_VERIFY,
   MSG_DUPLICATED_USER,
   MSG_JWT_ERROR,
-  QUERY_PARAM_EMAIL_VERIFY,
 } from "../utils/constants";
-import sibApiInstance from "../utils/sibApiInstance";
 
 const jwt = require("jsonwebtoken");
-const SibApiV3Sdk = require("@getbrevo/brevo");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
 const { WEBSITE_URL, ADMIN_EMAIL } = process.env;
+
+var transporter = nodemailer.createTransport({
+  host: "live.smtp.mailtrap.io",
+  port: 587,
+  auth: {
+    user: "api",
+    pass: "c8b5dd9f11fb2370004de5234d7be33e",
+  },
+});
 
 /**
  * User register
@@ -25,6 +32,7 @@ const { WEBSITE_URL, ADMIN_EMAIL } = process.env;
  */
 export const signUp = async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
+  console.log(">>> username", username);
 
   //  Check whether a user who has same username or email is already existed or not
   const duplicatedUser = await User.findOne({
@@ -41,49 +49,36 @@ export const signUp = async (req: Request, res: Response) => {
   const salt = await bcrypt.genSalt(10);
   const encryptedPassword = await bcrypt.hash(password, salt);
 
-  //  Create a user
-  const newUser = (
-    await User.create({
-      ...req.body,
-      password: encryptedPassword,
-    })
-  ).dataValues;
-
   jwt.sign(
-    { user: newUser },
+    { user: { username, email } },
     config.get(JWT_SECRET),
     { expiresIn: EXPIRES_DURATION_EMAIL_VERIFY },
-    (error: Error, token: string) => {
+    async (error: Error, token: string) => {
       if (error) return res.status(500).send(MSG_JWT_ERROR);
-
       try {
-        let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-
-        const sender = { email: ADMIN_EMAIL || "" };
-        const receivers = [{ email }];
-
-        sendSmtpEmail.subject = MAIL_TITLE_EMAIL_VERIFY;
-        sendSmtpEmail.sender = sender;
-        sendSmtpEmail.to = receivers;
-        sendSmtpEmail.htmlContent = `
-          <a href="${WEBSITE_URL}?${QUERY_PARAM_EMAIL_VERIFY}=${token}" target="_blank">${WEBSITE_URL}</a>
-        `;
-
-        sibApiInstance
-          .sendTransacEmail(sendSmtpEmail)
-          .then((result: any) => {
-            console.log(">>>>> result => ", result);
-            return res.sendStatus(200);
-          })
-          .catch((error: any) => {
-            console.log(">>>>>> error => ", error);
-            return res.sendStatus(500);
-          });
+        const sender = ADMIN_EMAIL;
+        await transporter.sendMail({
+          from: sender,
+          to: email,
+          subject: MAIL_TITLE_EMAIL_VERIFY,
+          text: "# Auth Verification",
+          html: `<a href="${WEBSITE_URL}/api/auth/verifyEmail/${token}" target="_blank">${WEBSITE_URL}</a>`,
+        });
+        
+        //  Create a user
+        await User.create({
+          ...req.body,
+          password: encryptedPassword,
+          verified: false,
+          token,
+        });
+        
+        return res.status(200).send("EMAIL SENT");
       } catch (err) {
         console.log(">>> err => ", err);
         return res.status(500).send(err);
       }
-    }
+    },
   );
 };
 
@@ -92,4 +87,91 @@ export const signUp = async (req: Request, res: Response) => {
  * @param req
  * @param res
  */
-export const signIn = (req: Request, res: Response) => {};
+export const signIn = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  console.log(">>> email", email);
+
+  const user = await User.findOne({
+    where: {
+      email
+    },
+  });
+
+  // check if user exist
+  if (!user) {
+    return res.status(404).send("User doesnt exist");
+  }
+
+  //  compare password
+  const isPasswordValid = await bcrypt.compare(password, user.getDataValue("password"));
+  if (!isPasswordValid) {
+    return res.status(401).send("Authentication Failed! Wrong Password");
+  }
+
+  // check if user is verified
+  const isVerified = user.getDataValue("verified");
+  if (!isVerified) {
+    return res.status(400).send("User is not verified");
+  }
+
+  // generate jwt token
+  const token = jwt.sign(
+    { user: { email } },
+    config.get(JWT_SECRET),
+    { expiresIn: EXPIRES_DURATION_EMAIL_VERIFY });
+
+  // set jwt cookie
+  res.cookie("jwt", token, {
+    httpOnly: true,
+    maxAge: 1 * 24 * 60 * 60 // 1 day
+  });
+
+  // return user data
+  return res.status(200).send(user);
+};
+
+/**
+ * Email verify
+ * @param req
+ * @param res
+ */
+export const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.params;
+
+  try {
+    const decoded = jwt.verify(token, config.get(JWT_SECRET));
+
+    const user = await User.findOne({
+      where: {
+        [Op.or]: {
+          username: decoded.user.username,
+          email: decoded.user.email,
+        },
+      },
+    });
+
+    if (!user) return res.status(400).send("Invalid Token");
+
+    if (user.getDataValue("verified")) {
+      return res
+        .status(200)
+        .send("User has been already verified. Please Login");
+    } else {
+      await User.update(
+        { verified: true, token: null },
+        {
+          where: {
+            [Op.or]: {
+              username: decoded.user.username,
+              email: decoded.user.email,
+            },
+          },
+        },
+      );
+      return res.status(200).send("EMAIL VERIFIED");
+    }
+  } catch (err) {
+    console.log(">>> err => ", err);
+    return res.status(500).send(err);
+  }
+};

@@ -10,6 +10,8 @@ const User = sequelize.define(
     email: DataTypes.STRING,
     password: DataTypes.STRING,
     membership_id: DataTypes.INTEGER,
+    verified: DataTypes.BOOLEAN,
+    token: DataTypes.STRING,
   },
   {
     timestamps: true,
