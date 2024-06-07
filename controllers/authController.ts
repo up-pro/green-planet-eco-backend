@@ -16,11 +16,11 @@ const nodemailer = require("nodemailer");
 const { WEBSITE_URL, ADMIN_EMAIL } = process.env;
 
 var transporter = nodemailer.createTransport({
-  host: "live.smtp.mailtrap.io",
-  port: 587,
+  host: "sandbox.smtp.mailtrap.io",
+  port: 2525,
   auth: {
-    user: "api",
-    pass: "c8b5dd9f11fb2370004de5234d7be33e",
+    user: "db624a0232ed0f",
+    pass: "3fe337db515cb6",
   },
 });
 
